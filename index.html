@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .status-btn {
+            transition: all 0.2s ease;
+        }
+        .status-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Toast Animation */
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .toast {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-indigo-700 text-white shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-clipboard-check text-2xl text-yellow-300"></i>
+                    <span class="font-bold text-xl tracking-tight">ClassTrack</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <span class="px-3 py-2 rounded-md text-sm font-medium bg-indigo-800 text-indigo-200">
+                            Academic Year 2024-2025
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Sidebar / Control Panel -->
+        <aside class="w-full md:w-80 bg-white shadow-xl z-40 flex flex-col h-full overflow-y-auto border-r border-gray-200">
+            <div class="p-6 space-y-6">
+                
+                <!-- Date Selector -->
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Select Date</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-calendar text-gray-400"></i>
+                        </div>
+                        <input type="date" id="datePicker" class="pl-10 block w-full rounded-lg border-gray-300 bg-gray-50 border p-2.5 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm transition">
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                        <p class="text-xs text-emerald-600 font-bold uppercase">Present</p>
+                        <p class="text-2xl font-bold text-emerald-700" id="presentCount">0</p>
+                    </div>
+                    <div class="bg-rose-50 p-4 rounded-xl border border-rose-100">
+                        <p class="text-xs text-rose-600 font-bold uppercase">Absent</p>
+                        <p class="text-2xl font-bold text-rose-700" id="absentCount">0</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 col-span-2">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-xs text-blue-600 font-bold uppercase">Total Students</p>
+                                <p class="text-2xl font-bold text-blue-700" id="totalCount">0</p>
+                            </div>
+                            <div class="h-10 w-10 bg-blue-200 rounded-full flex items-center justify-center text-blue-600">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="border-gray-200">
+
+                <!-- Add Student Form -->
+                <div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">Add New Student</h3>
+                    <form id="addStudentForm" class="space-y-3">
+                        <div>
+                            <input type="text" id="studentName" placeholder="Full Name" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                        </div>
+                        <div>
+                            <input type="text" id="rollNo" placeholder="Roll Number (e.g., 101)" class="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none" required>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition shadow-md flex items-center justify-center gap-2">
+                            <i class="fas fa-plus"></i> Add Student
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Developers Credit (Requested) -->
+                <div class="mt-auto pt-6 text-center">
+                    <p class="text-xs text-gray-500 mb-1">Developed & Designed by</p>
+                    <div class="flex flex-wrap justify-center gap-2 text-xs font-semibold text-indigo-600 bg-indigo-50 p-3 rounded-lg border border-indigo-100">
+                        <span><i class="fas fa-code mr-1"></i>Swayam</span>
+                        <span>•</span>
+                        <span>Aditya</span>
+                        <span>•</span>
+                        <span>Lakhan</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Table Area -->
+        <main class="flex-1 bg-gray-50 overflow-y-auto p-4 md:p-8 relative">
+            
+            <div class="max-w-5xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Attendance Register</h2>
+                    <div class="flex gap-2">
+                        <button onclick="markAll('Present')" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-4 py-2 rounded-lg text-sm font-medium transition">
+                            Mark All Present
+                        </button>
+                        <button onclick="clearAttendance()" class="bg-white text-gray-600 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-medium transition">
+                            Reset Day
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Roll No</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="studentTableBody">
+                            <!-- Rows injected via JS -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden p-12 text-center">
+                        <div class="inline-block p-4 rounded-full bg-gray-100 mb-4">
+                            <i class="fas fa-user-graduate text-3xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900">No students added yet</h3>
+                        <p class="text-gray-500 mt-1">Use the sidebar form to add students to the class.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script>
+        // --- State Management ---
+        let students = JSON.parse(localStorage.getItem('ams_students')) || [
+            { id: 1, name: 'Swayam Gupta', rollNo: '101' },
+            { id: 2, name: 'Aditya Kumar', rollNo: '102' },
+            { id: 3, name: 'Lakhan Singh', rollNo: '103' },
+            { id: 4, name: 'John Doe', rollNo: '104' },
+        ]; // Initial seed data if empty
+
+        let attendanceData = JSON.parse(localStorage.getItem('ams_attendance')) || {};
+        let currentDate = new Date().toISOString().split('T')[0];
+
+        // --- DOM Elements ---
+        const datePicker = document.getElementById('datePicker');
+        const tableBody = document.getElementById('studentTableBody');
+        const form = document.getElementById('addStudentForm');
+        const emptyState = document.getElementById('emptyState');
+        
+        // Stats
+        const presentCountEl = document.getElementById('presentCount');
+        const absentCountEl = document.getElementById('absentCount');
+        const totalCountEl = document.getElementById('totalCount');
+
+        // --- Initialization ---
+        datePicker.value = currentDate;
+        
+        // --- Event Listeners ---
+        datePicker.addEventListener('change', (e) => {
+            currentDate = e.target.value;
+            renderTable();
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('studentName').value;
+            const rollNo = document.getElementById('rollNo').value;
+            addStudent(name, rollNo);
+            form.reset();
+        });
+
+        // --- Core Functions ---
+
+        function saveToLocal() {
+            localStorage.setItem('ams_students', JSON.stringify(students));
+            localStorage.setItem('ams_attendance', JSON.stringify(attendanceData));
+            updateStats();
+        }
+
+        function getStatus(studentId) {
+            if (!attendanceData[currentDate]) return null;
+            return attendanceData[currentDate][studentId]; // 'Present', 'Absent', or undefined
+        }
+
+        function addStudent(name, rollNo) {
+            if (students.some(s => s.rollNo === rollNo)) {
+                showToast('Error: Roll Number already exists!', 'error');
+                return;
+            }
+            const newStudent = {
+                id: Date.now(),
+                name: name,
+                rollNo: rollNo
+            };
+            students.push(newStudent);
+            saveToLocal();
+            renderTable();
+            showToast('Student added successfully', 'success');
+        }
+
+        function deleteStudent(id) {
+            if(confirm('Are you sure you want to delete this student?')) {
+                students = students.filter(s => s.id !== id);
+                saveToLocal();
+                renderTable();
+                showToast('Student removed', 'neutral');
+            }
+        }
+
+        function markAttendance(studentId, status) {
+            if (!attendanceData[currentDate]) {
+                attendanceData[currentDate] = {};
+            }
+            
+            // Toggle logic: if clicking the same status, remove it (reset)
+            if (attendanceData[currentDate][studentId] === status) {
+                delete attendanceData[currentDate][studentId];
+            } else {
+                attendanceData[currentDate][studentId] = status;
+            }
+            
+            saveToLocal();
+            renderTable(); // Re-render to update UI classes
+        }
+
+        function markAll(status) {
+            if (!attendanceData[currentDate]) attendanceData[currentDate] = {};
+            students.forEach(s => {
+                attendanceData[currentDate][s.id] = status;
+            });
+            saveToLocal();
+            renderTable();
+            showToast(`All marked as ${status}`, 'success');
+        }
+
+        function clearAttendance() {
+            if(attendanceData[currentDate]) {
+                delete attendanceData[currentDate];
+                saveToLocal();
+                renderTable();
+                showToast('Attendance cleared for today', 'neutral');
+            }
+        }
+
+        function updateStats() {
+            if (!students.length) {
+                totalCountEl.innerText = 0;
+                presentCountEl.innerText = 0;
+                absentCountEl.innerText = 0;
+                return;
+            }
+
+            const todayRecords = attendanceData[currentDate] || {};
+            let p = 0, a = 0;
+            
+            Object.values(todayRecords).forEach(status => {
+                if (status === 'Present') p++;
+                if (status === 'Absent') a++;
+            });
+
+            totalCountEl.innerText = students.length;
+            presentCountEl.innerText = p;
+            absentCountEl.innerText = a;
+        }
+
+        function renderTable() {
+            tableBody.innerHTML = '';
+            
+            if (students.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Sort by Roll No
+            students.sort((a, b) => a.rollNo.localeCompare(b.rollNo, undefined, {numeric: true}));
+
+            students.forEach(student => {
+                const status = getStatus(student.id);
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-50 transition-colors";
+
+                // Styling based on status
+                const isPresent = status === 'Present';
+                const isAbsent = status === 'Absent';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded border border-gray-200">#${student.rollNo}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 font-medium">
+                        ${student.name}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                        <div class="flex justify-center gap-2">
+                            <button onclick="markAttendance(${student.id}, 'Present')" 
+                                class="status-btn w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all focus:outline-none ${isPresent ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-200' : 'border-gray-200 text-gray-300 hover:border-emerald-400 hover:text-emerald-400'}">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button onclick="markAttendance(${student.id}, 'Absent')"
+                                class="status-btn w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all focus:outline-none ${isAbsent ? 'bg-rose-500 border-rose-500 text-white shadow-lg shadow-rose-200' : 'border-gray-200 text-gray-300 hover:border-rose-400 hover:text-rose-400'}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button onclick="deleteStudent(${student.id})" class="text-gray-400 hover:text-red-600 transition-colors">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            updateStats();
+        }
+
+        // --- UI Helper: Toast Notification ---
+        function showToast(message, type = 'neutral') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            let colors = 'bg-gray-800 text-white';
+            if (type === 'success') colors = 'bg-emerald-600 text-white';
+            if (type === 'error') colors = 'bg-red-600 text-white';
+
+            toast.className = `toast ${colors} px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 pointer-events-auto min-w-[250px]`;
+            
+            let icon = 'fa-info-circle';
+            if (type === 'success') icon = 'fa-check-circle';
+            if (type === 'error') icon = 'fa-exclamation-circle';
+
+            toast.innerHTML = `
+                <i class="fas ${icon}"></i>
+                <span class="text-sm font-medium">${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Initial Render
+        renderTable();
+
+    </script>
+</body>
+</html>
